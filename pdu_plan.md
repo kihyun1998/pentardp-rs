@@ -195,10 +195,16 @@ hex = "0.4"                # 테스트용 hex 인코딩
 - [x] BER 코덱 구현 (`codec/ber.rs`)
 - [x] 통합 테스트 (55개 테스트 통과)
 
-### Phase 3 - RDP 코어
-- [ ] Client Info PDU
-- [ ] Capability Sets
-- [ ] Control/Synchronize PDUs
+### Phase 3 - RDP 코어 ✅ 완료
+- [x] RDP 공통 헤더 (`pdu/rdp/header.rs`)
+- [x] Client Info PDU (`pdu/rdp/connection/client_info.rs`)
+- [x] Capability Sets 기본 구조 (`pdu/rdp/capability/sets.rs`)
+- [x] General Capability Set (`pdu/rdp/capability/general.rs`)
+- [x] Bitmap Capability Set (`pdu/rdp/capability/bitmap.rs`)
+- [x] Order Capability Set (`pdu/rdp/capability/order.rs`)
+- [x] Input Capability Set (`pdu/rdp/capability/input.rs`)
+- [x] Control/Synchronize PDUs (`pdu/rdp/control.rs`)
+- [x] 통합 테스트 (90개 테스트 통과)
 
 ### Phase 4 - 데이터 전송
 - [ ] Input PDUs (키보드, 마우스)
