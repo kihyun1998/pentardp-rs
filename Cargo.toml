@@ -4,3 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+bytes = "1.5"              # 효율적인 바이트 버퍼
+byteorder = "1.5"          # 바이트 순서 변환
+thiserror = "1.0"          # 에러 정의
+num_enum = "0.7"           # enum ↔ 숫자 변환
+bitflags = "2.4"           # 플래그 비트 처리
+
+[dev-dependencies]
+hex = "0.4"                # 테스트용 hex 인코딩

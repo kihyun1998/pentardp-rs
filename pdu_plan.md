@@ -8,38 +8,36 @@ RDP 프로토콜은 여러 계층으로 구성되므로, 다음과 같은 모듈
 src/
 ├── lib.rs
 ├── pdu/
-│   ├── mod.rs                 # PDU 공통 trait 및 유틸리티
-│   ├── tpkt/                  # TPKT Layer (RFC 1006)
-│   │   ├── mod.rs
-│   │   └── packet.rs
-│   ├── x224/                  # X.224 Connection-Oriented Transport
-│   │   ├── mod.rs
-│   │   ├── connection.rs      # Connection Request/Confirm
-│   │   ├── data.rs            # Data Transfer
-│   │   └── disconnect.rs      # Disconnect Request
-│   ├── mcs/                   # MCS Layer (T.125)
-│   │   ├── mod.rs
-│   │   ├── connect.rs         # MCS Connect Initial/Response
-│   │   ├── channel.rs         # Channel Join/Attach
-│   │   └── domain.rs          # Domain PDUs
-│   └── rdp/                   # RDP Core Layer
-│       ├── mod.rs
-│       ├── capability/        # Capability Sets
-│       │   ├── mod.rs
+│   ├── mod.rs                  # PDU 공통 trait 및 유틸리티 (선언 전용)
+│   ├── tpkt.rs                 # TPKT Layer (단일 파일 모듈)
+│   ├── x224/                   # X.224 Connection-Oriented Transport (디렉토리 모듈)
+│   │   ├── mod.rs              # mod connection; mod data; mod disconnect; 선언
+│   │   ├── connection.rs       # Connection Request/Confirm
+│   │   ├── data.rs             # Data Transfer
+│   │   └── disconnect.rs       # Disconnect Request
+│   ├── mcs/                    # MCS Layer (디렉토리 모듈)
+│   │   ├── mod.rs              # mod connect; mod channel; mod domain; 선언
+│   │   ├── connect.rs          # MCS Connect Initial/Response
+│   │   ├── channel.rs          # Channel Join/Attach
+│   │   └── domain.rs           # Domain PDUs
+│   └── rdp/                    # RDP Core Layer (디렉토리 모듈)
+│       ├── mod.rs              # RDP 공통, mod capability; mod connection; mod input; mod graphics; 선언
+│       ├── capability/         # Capability Sets (디렉토리 모듈)
+│       │   ├── mod.rs          # mod general; mod bitmap; mod order; mod input; 선언
 │       │   ├── general.rs
 │       │   ├── bitmap.rs
 │       │   ├── order.rs
 │       │   └── input.rs
-│       ├── connection/        # Connection Sequence
-│       │   ├── mod.rs
+│       ├── connection/         # Connection Sequence (디렉토리 모듈)
+│       │   ├── mod.rs          # mod client_info; mod server_demand; 선언
 │       │   ├── client_info.rs
 │       │   └── server_demand.rs
-│       ├── input/             # Input PDUs
-│       │   ├── mod.rs
+│       ├── input/              # Input PDUs (디렉토리 모듈)
+│       │   ├── mod.rs          # mod keyboard; mod mouse; 선언
 │       │   ├── keyboard.rs
 │       │   └── mouse.rs
-│       └── graphics/          # Graphics Update PDUs
-│           ├── mod.rs
+│       └── graphics/           # Graphics Update PDUs (디렉토리 모듈)
+│           ├── mod.rs          # mod bitmap; mod orders; 선언
 │           ├── bitmap.rs
 │           └── orders.rs
 ```
@@ -184,10 +182,11 @@ hex = "0.4"                # 테스트용 hex 인코딩
 
 ## 6. 구현 우선순위
 
-### Phase 1 - 기본 계층
-- [ ] 공통 trait 및 에러 타입
-- [ ] TPKT 패킷
-- [ ] X.224 Data 패킷
+### Phase 1 - 기본 계층 ✅ 완료
+- [x] 공통 trait 및 에러 타입 (`pdu/mod.rs`)
+- [x] TPKT 패킷 (`pdu/tpkt.rs`)
+- [x] X.224 Data 패킷 (`pdu/x224/data.rs`)
+- [x] 단위 테스트 (16개 테스트 통과)
 
 ### Phase 2 - 연결 설정
 - [ ] X.224 Connection Request/Confirm
