@@ -1,5 +1,7 @@
+pub mod connection;
 pub mod data;
 
+pub use connection::{ConnectionConfirm, ConnectionHeader, ConnectionRequest, Protocol, RdpNegotiation};
 pub use data::{DataHeader, DataPdu};
 
 /// X.224 PDU 타입

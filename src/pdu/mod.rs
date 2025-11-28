@@ -5,6 +5,7 @@ use thiserror::Error;
 pub mod tpkt;
 
 // 디렉토리 모듈
+pub mod mcs;
 pub mod x224;
 
 /// PDU 파싱 및 직렬화 결과 타입

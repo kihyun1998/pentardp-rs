@@ -188,10 +188,12 @@ hex = "0.4"                # 테스트용 hex 인코딩
 - [x] X.224 Data 패킷 (`pdu/x224/data.rs`)
 - [x] 단위 테스트 (16개 테스트 통과)
 
-### Phase 2 - 연결 설정
-- [ ] X.224 Connection Request/Confirm
-- [ ] MCS Connect Initial/Response
-- [ ] Channel Join 시퀀스
+### Phase 2 - 연결 설정 ✅ 완료
+- [x] X.224 Connection Request/Confirm (`pdu/x224/connection.rs`)
+- [x] MCS Connect Initial/Response (`pdu/mcs/connect.rs`)
+- [x] Channel Join 시퀀스 (`pdu/mcs/channel.rs`, `pdu/mcs/domain.rs`)
+- [x] BER 코덱 구현 (`codec/ber.rs`)
+- [x] 통합 테스트 (55개 테스트 통과)
 
 ### Phase 3 - RDP 코어
 - [ ] Client Info PDU
