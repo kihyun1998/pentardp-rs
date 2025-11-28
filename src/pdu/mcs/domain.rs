@@ -65,14 +65,14 @@ impl McsResult {
 /// }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ErectDomainRequest {
-    /// Sub-height (보통 0)
+    /// Sub-height (usually 0)
     pub sub_height: u32,
-    /// Sub-interval (보통 0)
+    /// Sub-interval (usually 0)
     pub sub_interval: u32,
 }
 
 impl ErectDomainRequest {
-    /// 새로운 ErectDomainRequest 생성
+    /// Create new ErectDomainRequest
     pub fn new(sub_height: u32, sub_interval: u32) -> Self {
         Self {
             sub_height,
@@ -80,7 +80,7 @@ impl ErectDomainRequest {
         }
     }
 
-    /// 기본값으로 생성 (sub_height=0, sub_interval=0)
+    /// Create with default values (sub_height=0, sub_interval=0)
     pub fn default_request() -> Self {
         Self::new(0, 0)
     }
@@ -129,7 +129,7 @@ impl Pdu for ErectDomainRequest {
 pub struct AttachUserRequest;
 
 impl AttachUserRequest {
-    /// 새로운 AttachUserRequest 생성
+    /// Create new AttachUserRequest
     pub fn new() -> Self {
         Self
     }
@@ -185,17 +185,17 @@ pub struct AttachUserConfirm {
 }
 
 impl AttachUserConfirm {
-    /// 새로운 AttachUserConfirm 생성
+    /// Create new AttachUserConfirm
     pub fn new(result: McsResult, user_id: Option<u16>) -> Self {
         Self { result, user_id }
     }
 
-    /// 성공 응답 생성
+    /// Create success response
     pub fn success(user_id: u16) -> Self {
         Self::new(McsResult::RtSuccessful, Some(user_id))
     }
 
-    /// 실패 응답 생성
+    /// Create failure response
     pub fn failure(result: McsResult) -> Self {
         Self::new(result, None)
     }

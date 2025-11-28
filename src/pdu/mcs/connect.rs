@@ -35,7 +35,7 @@ pub struct DomainParameters {
 }
 
 impl DomainParameters {
-    /// 새로운 DomainParameters 생성
+    /// Create new DomainParameters
     pub fn new(
         max_channel_ids: u32,
         max_user_ids: u32,
@@ -58,7 +58,7 @@ impl DomainParameters {
         }
     }
 
-    /// RDP 클라이언트 기본 target parameters
+    /// RDP client default target parameters
     pub fn target() -> Self {
         Self {
             max_channel_ids: 34,
@@ -72,7 +72,7 @@ impl DomainParameters {
         }
     }
 
-    /// RDP 클라이언트 기본 minimum parameters
+    /// RDP client default minimum parameters
     pub fn minimum() -> Self {
         Self {
             max_channel_ids: 1,
@@ -86,7 +86,7 @@ impl DomainParameters {
         }
     }
 
-    /// RDP 클라이언트 기본 maximum parameters
+    /// RDP client default maximum parameters
     pub fn maximum() -> Self {
         Self {
             max_channel_ids: 65535,
@@ -100,7 +100,7 @@ impl DomainParameters {
         }
     }
 
-    /// BER 인코딩
+    /// BER Encode
     pub fn encode(&self, writer: &mut BerWriter) {
         writer.write_sequence(|w| {
             w.write_integer(self.max_channel_ids);
@@ -114,7 +114,7 @@ impl DomainParameters {
         });
     }
 
-    /// BER 디코딩
+    /// BER Decode
     pub fn decode(reader: &mut BerReader) -> Result<Self> {
         reader.read_tag()?; // SEQUENCE tag
         reader.read_length()?;
@@ -161,7 +161,7 @@ pub struct ConnectInitial {
 }
 
 impl ConnectInitial {
-    /// 새로운 ConnectInitial 생성
+    /// Create new ConnectInitial
     pub fn new(user_data: Vec<u8>) -> Self {
         Self {
             calling_domain: vec![1],
@@ -174,7 +174,7 @@ impl ConnectInitial {
         }
     }
 
-    /// 커스텀 파라미터로 생성
+    /// Create with custom parameters
     pub fn with_parameters(
         target: DomainParameters,
         minimum: DomainParameters,
@@ -265,7 +265,7 @@ pub struct ConnectResponse {
 }
 
 impl ConnectResponse {
-    /// 새로운 ConnectResponse 생성
+    /// Create new ConnectResponse
     pub fn new(
         result: McsResult,
         called_connect_id: u32,
@@ -280,7 +280,7 @@ impl ConnectResponse {
         }
     }
 
-    /// 성공 응답 생성
+    /// Create success response
     pub fn success(user_data: Vec<u8>) -> Self {
         Self {
             result: McsResult::RtSuccessful,

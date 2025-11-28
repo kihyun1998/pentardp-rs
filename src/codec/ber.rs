@@ -1,7 +1,7 @@
 use crate::pdu::{PduError, Result};
 use std::io::Write;
 
-/// BER 태그 타입
+/// BER Tag Type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BerTag {
     Boolean = 0x01,
@@ -11,7 +11,7 @@ pub enum BerTag {
     Sequence = 0x30,
 }
 
-/// BER 클래스 타입
+/// BER Class Type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BerClass {
     Universal = 0x00,
@@ -20,14 +20,14 @@ pub enum BerClass {
     Private = 0xC0,
 }
 
-/// BER Reader - BER 인코딩된 데이터를 읽기 위한 유틸리티
+/// BER Reader - Utility for reading BER encoded data
 pub struct BerReader<'a> {
     buffer: &'a [u8],
     position: usize,
 }
 
 impl<'a> BerReader<'a> {
-    /// 새로운 BER Reader 생성
+    /// Create new BER Reader
     pub fn new(buffer: &'a [u8]) -> Self {
         Self {
             buffer,
@@ -35,17 +35,17 @@ impl<'a> BerReader<'a> {
         }
     }
 
-    /// 현재 위치 반환
+    /// Return current position
     pub fn position(&self) -> usize {
         self.position
     }
 
-    /// 남은 바이트 수 반환
+    /// Return remaining bytes
     pub fn remaining(&self) -> usize {
         self.buffer.len().saturating_sub(self.position)
     }
 
-    /// BER 태그 읽기 (1바이트 태그만 지원)
+    /// Read BER Tag (supports only 1-byte tag)
     pub fn read_tag(&mut self) -> Result<u8> {
         if self.remaining() < 1 {
             return Err(PduError::InsufficientData {
@@ -59,7 +59,7 @@ impl<'a> BerReader<'a> {
         Ok(tag)
     }
 
-    /// BER 길이 읽기 (short form, long form 지원)
+    /// Read BER Length (supports short form, long form)
     pub fn read_length(&mut self) -> Result<usize> {
         if self.remaining() < 1 {
             return Err(PduError::InsufficientData {
@@ -71,16 +71,16 @@ impl<'a> BerReader<'a> {
         let first_byte = self.buffer[self.position];
         self.position += 1;
 
-        // Short form: 최상위 비트가 0 (0-127)
+        // Short form: MSB is 0 (0-127)
         if first_byte & 0x80 == 0 {
             return Ok(first_byte as usize);
         }
 
-        // Long form: 최상위 비트가 1
+        // Long form: MSB is 1
         let num_octets = (first_byte & 0x7F) as usize;
 
         if num_octets == 0 {
-            // Indefinite form은 지원하지 않음
+            // Indefinite form is not supported
             return Err(PduError::ParseError(
                 "Indefinite length not supported".to_string(),
             ));
@@ -109,7 +109,7 @@ impl<'a> BerReader<'a> {
         Ok(length)
     }
 
-    /// INTEGER 읽기 (BER 인코딩)
+    /// Read INTEGER (BER encoded)
     pub fn read_integer(&mut self) -> Result<u32> {
         let tag = self.read_tag()?;
         if tag != BerTag::Integer as u8 {
@@ -143,7 +143,7 @@ impl<'a> BerReader<'a> {
         Ok(value)
     }
 
-    /// OCTET STRING 읽기
+    /// Read OCTET STRING
     pub fn read_octet_string(&mut self) -> Result<Vec<u8>> {
         let tag = self.read_tag()?;
         if tag != BerTag::OctetString as u8 {
@@ -157,7 +157,7 @@ impl<'a> BerReader<'a> {
         self.read_bytes(length)
     }
 
-    /// ENUMERATED 읽기
+    /// Read ENUMERATED
     pub fn read_enumerated(&mut self) -> Result<u8> {
         let tag = self.read_tag()?;
         if tag != BerTag::Enumerated as u8 {
@@ -187,7 +187,7 @@ impl<'a> BerReader<'a> {
         Ok(value)
     }
 
-    /// BOOLEAN 읽기
+    /// Read BOOLEAN
     pub fn read_boolean(&mut self) -> Result<bool> {
         let tag = self.read_tag()?;
         if tag != BerTag::Boolean as u8 {
@@ -217,7 +217,7 @@ impl<'a> BerReader<'a> {
         Ok(value != 0)
     }
 
-    /// 지정된 길이만큼 바이트 읽기
+    /// Read specified number of bytes
     pub fn read_bytes(&mut self, length: usize) -> Result<Vec<u8>> {
         if self.remaining() < length {
             return Err(PduError::InsufficientData {
@@ -231,7 +231,7 @@ impl<'a> BerReader<'a> {
         Ok(bytes)
     }
 
-    /// APPLICATION 태그가 있는 SEQUENCE 읽기
+    /// Read SEQUENCE with APPLICATION tag
     pub fn read_application_tag(&mut self, expected_tag: u8) -> Result<usize> {
         let tag = self.read_tag()?;
         let expected = BerClass::Application as u8 | expected_tag;
@@ -246,7 +246,7 @@ impl<'a> BerReader<'a> {
         self.read_length()
     }
 
-    /// Context-Specific 태그 읽기
+    /// Read Context-Specific tag
     pub fn read_context_tag(&mut self, expected_tag: u8) -> Result<usize> {
         let tag = self.read_tag()?;
         let expected = BerClass::ContextSpecific as u8 | expected_tag;
@@ -262,33 +262,33 @@ impl<'a> BerReader<'a> {
     }
 }
 
-/// BER Writer - BER 인코딩 데이터를 쓰기 위한 유틸리티
+/// BER Writer - Utility for writing BER encoded data
 pub struct BerWriter {
     buffer: Vec<u8>,
 }
 
 impl BerWriter {
-    /// 새로운 BER Writer 생성
+    /// Create new BER Writer
     pub fn new() -> Self {
         Self { buffer: Vec::new() }
     }
 
-    /// 버퍼를 소비하고 Vec<u8> 반환
+    /// Consume buffer and return Vec<u8>
     pub fn into_bytes(self) -> Vec<u8> {
         self.buffer
     }
 
-    /// 현재 버퍼 참조 반환
+    /// Return reference to current buffer
     pub fn as_bytes(&self) -> &[u8] {
         &self.buffer
     }
 
-    /// BER 태그 쓰기
+    /// Write BER Tag
     pub fn write_tag(&mut self, tag: u8) {
         self.buffer.push(tag);
     }
 
-    /// BER 길이 쓰기 (short form, long form 자동 선택)
+    /// Write BER Length (automatically selects short form or long form)
     pub fn write_length(&mut self, length: usize) {
         if length < 128 {
             // Short form
@@ -302,21 +302,21 @@ impl BerWriter {
                 temp >>= 8;
             }
 
-            // 첫 바이트: 0x80 | num_octets
+            // First byte: 0x80 | num_octets
             self.buffer.push(0x80 | num_octets);
 
-            // 길이를 빅엔디안으로 쓰기
+            // Write length in big-endian
             for i in (0..num_octets).rev() {
                 self.buffer.push(((length >> (i * 8)) & 0xFF) as u8);
             }
         }
     }
 
-    /// INTEGER 쓰기
+    /// Write INTEGER
     pub fn write_integer(&mut self, value: u32) {
         self.write_tag(BerTag::Integer as u8);
 
-        // 필요한 바이트 수 계산
+        // Calculate required bytes
         let bytes = if value == 0 {
             vec![0]
         } else {
@@ -328,7 +328,7 @@ impl BerWriter {
             }
             bytes.reverse();
 
-            // 최상위 비트가 1이면 0x00 패딩 추가 (음수로 해석되지 않도록)
+            // If MSB is 1, add 0x00 padding (to avoid interpretation as negative number)
             if bytes[0] & 0x80 != 0 {
                 bytes.insert(0, 0x00);
             }
@@ -340,28 +340,28 @@ impl BerWriter {
         self.buffer.extend_from_slice(&bytes);
     }
 
-    /// OCTET STRING 쓰기
+    /// Write OCTET STRING
     pub fn write_octet_string(&mut self, data: &[u8]) {
         self.write_tag(BerTag::OctetString as u8);
         self.write_length(data.len());
         self.buffer.extend_from_slice(data);
     }
 
-    /// BOOLEAN 쓰기
+    /// Write BOOLEAN
     pub fn write_boolean(&mut self, value: bool) {
         self.write_tag(BerTag::Boolean as u8);
         self.write_length(1);
         self.buffer.push(if value { 0xFF } else { 0x00 });
     }
 
-    /// ENUMERATED 쓰기
+    /// Write ENUMERATED
     pub fn write_enumerated(&mut self, value: u8) {
         self.write_tag(BerTag::Enumerated as u8);
         self.write_length(1);
         self.buffer.push(value);
     }
 
-    /// SEQUENCE 쓰기
+    /// Write SEQUENCE
     pub fn write_sequence<F>(&mut self, f: F)
     where
         F: FnOnce(&mut Self),
@@ -374,7 +374,7 @@ impl BerWriter {
         self.buffer.extend_from_slice(&inner.buffer);
     }
 
-    /// APPLICATION 태그와 함께 쓰기
+    /// Write with APPLICATION tag
     pub fn write_application_tag<F>(&mut self, tag: u8, f: F)
     where
         F: FnOnce(&mut Self),
@@ -387,7 +387,7 @@ impl BerWriter {
         self.buffer.extend_from_slice(&inner.buffer);
     }
 
-    /// Context-Specific 태그와 함께 쓰기
+    /// Write with Context-Specific tag
     pub fn write_context_tag<F>(&mut self, tag: u8, f: F)
     where
         F: FnOnce(&mut Self),

@@ -8,7 +8,7 @@ pub const X224_CR_TYPE: u8 = 0xE0;
 /// X.224 Connection Confirm PDU Type
 pub const X224_CC_TYPE: u8 = 0xD0;
 
-/// X.224 Connection 헤더 최소 크기 (LI + Type + DST-REF + SRC-REF + Class)
+/// X.224 Connection header minimum size (LI + Type + DST-REF + SRC-REF + Class)
 pub const X224_CONNECTION_HEADER_MIN_SIZE: usize = 7;
 
 /// RDP Negotiation Request Type
@@ -20,10 +20,10 @@ pub const RDP_NEG_RSP: u8 = 0x02;
 /// RDP Negotiation Failure Type
 pub const RDP_NEG_FAILURE: u8 = 0x03;
 
-/// RDP Negotiation 구조체 크기
+/// RDP Negotiation structure size
 pub const RDP_NEG_DATA_SIZE: usize = 8;
 
-/// RDP 프로토콜 플래그
+/// RDP protocol flags
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Protocol {
     /// Standard RDP Security (0x00)
@@ -63,7 +63,7 @@ pub struct RdpNegotiation {
 }
 
 impl RdpNegotiation {
-    /// RDP Negotiation Request 생성
+    /// Create RDP Negotiation Request
     pub fn new_request(protocol: u32) -> Self {
         Self {
             neg_type: RDP_NEG_REQ,
@@ -72,7 +72,7 @@ impl RdpNegotiation {
         }
     }
 
-    /// RDP Negotiation Response 생성
+    /// Create RDP Negotiation Response
     pub fn new_response(protocol: u32) -> Self {
         Self {
             neg_type: RDP_NEG_RSP,
@@ -81,7 +81,7 @@ impl RdpNegotiation {
         }
     }
 
-    /// 인코딩
+    /// Encode
     pub fn encode(&self, buffer: &mut dyn Write) -> Result<()> {
         buffer.write_u8(self.neg_type)?;
         buffer.write_u8(self.flags)?;
@@ -90,7 +90,7 @@ impl RdpNegotiation {
         Ok(())
     }
 
-    /// 디코딩
+    /// Decode
     pub fn decode(buffer: &mut dyn Read) -> Result<Self> {
         let neg_type = buffer.read_u8()?;
         let flags = buffer.read_u8()?;
@@ -112,16 +112,16 @@ impl RdpNegotiation {
         })
     }
 
-    /// 크기 반환
+    /// Return size
     pub fn size(&self) -> usize {
         RDP_NEG_DATA_SIZE
     }
 }
 
-/// X.224 Connection 헤더
+/// X.224 Connection header
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConnectionHeader {
-    /// Length Indicator: X.224 헤더 길이 - 1
+    /// Length Indicator: X.224 header length - 1
     pub length_indicator: u8,
     /// PDU Type (0xE0 for CR, 0xD0 for CC)
     pub pdu_type: u8,
@@ -134,7 +134,7 @@ pub struct ConnectionHeader {
 }
 
 impl ConnectionHeader {
-    /// 새로운 Connection Request 헤더 생성
+    /// Create new Connection Request header
     pub fn new_request(src_ref: u16) -> Self {
         Self {
             length_indicator: 6, // 7 - 1
@@ -145,7 +145,7 @@ impl ConnectionHeader {
         }
     }
 
-    /// 새로운 Connection Confirm 헤더 생성
+    /// Create new Connection Confirm header
     pub fn new_confirm(dst_ref: u16, src_ref: u16) -> Self {
         Self {
             length_indicator: 6, // 7 - 1
@@ -156,7 +156,7 @@ impl ConnectionHeader {
         }
     }
 
-    /// 헤더 인코딩
+    /// Encode header
     pub fn encode(&self, buffer: &mut dyn Write) -> Result<()> {
         buffer.write_u8(self.length_indicator)?;
         buffer.write_u8(self.pdu_type)?;
@@ -166,12 +166,12 @@ impl ConnectionHeader {
         Ok(())
     }
 
-    /// 헤더 디코딩 (variable part는 스킵하지 않음)
+    /// Decode header (does not skip variable part)
     pub fn decode(buffer: &mut dyn Read) -> Result<Self> {
         let length_indicator = buffer.read_u8()?;
         let pdu_type = buffer.read_u8()?;
 
-        // PDU Type 검증
+        // Verify PDU Type
         if pdu_type != X224_CR_TYPE && pdu_type != X224_CC_TYPE {
             return Err(PduError::InvalidPduType(pdu_type));
         }
@@ -180,8 +180,8 @@ impl ConnectionHeader {
         let src_ref = buffer.read_u16::<LittleEndian>()?;
         let class_option = buffer.read_u8()?;
 
-        // Variable part는 여기서 스킵하지 않음
-        // 각 PDU (ConnectionRequest/ConnectionConfirm)에서 처리
+        // Variable part is not skipped here
+        // Processed in each PDU (ConnectionRequest/ConnectionConfirm)
 
         Ok(Self {
             length_indicator,
@@ -192,7 +192,7 @@ impl ConnectionHeader {
         })
     }
 
-    /// 헤더 크기 반환
+    /// Return header size
     pub fn size(&self) -> usize {
         self.length_indicator as usize + 1
     }
@@ -201,16 +201,16 @@ impl ConnectionHeader {
 /// X.224 Connection Request PDU
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConnectionRequest {
-    /// Connection 헤더
+    /// Connection header
     header: ConnectionHeader,
-    /// Cookie (옵션)
+    /// Cookie (optional)
     cookie: Option<String>,
-    /// RDP Negotiation Request (옵션)
+    /// RDP Negotiation Request (optional)
     rdp_negotiation: Option<RdpNegotiation>,
 }
 
 impl ConnectionRequest {
-    /// 새로운 Connection Request 생성
+    /// Create new Connection Request
     pub fn new(src_ref: u16) -> Self {
         Self {
             header: ConnectionHeader::new_request(src_ref),
@@ -219,21 +219,21 @@ impl ConnectionRequest {
         }
     }
 
-    /// Cookie 설정
+    /// Set Cookie
     pub fn with_cookie(mut self, username: &str) -> Self {
         self.cookie = Some(format!("Cookie: mstshash={}\r\n", username));
         self.update_length_indicator();
         self
     }
 
-    /// RDP Negotiation Request 설정
+    /// Set RDP Negotiation Request
     pub fn with_negotiation(mut self, protocol: u32) -> Self {
         self.rdp_negotiation = Some(RdpNegotiation::new_request(protocol));
         self.update_length_indicator();
         self
     }
 
-    /// Length Indicator 업데이트
+    /// Update Length Indicator
     fn update_length_indicator(&mut self) {
         let variable_size = self.cookie.as_ref().map(|c| c.len()).unwrap_or(0)
             + self.rdp_negotiation.as_ref().map(|n| n.size()).unwrap_or(0);
@@ -241,12 +241,12 @@ impl ConnectionRequest {
         self.header.length_indicator = (X224_CONNECTION_HEADER_MIN_SIZE - 1 + variable_size) as u8;
     }
 
-    /// Cookie 반환
+    /// Return Cookie
     pub fn cookie(&self) -> Option<&str> {
         self.cookie.as_deref()
     }
 
-    /// RDP Negotiation 반환
+    /// Return RDP Negotiation
     pub fn rdp_negotiation(&self) -> Option<&RdpNegotiation> {
         self.rdp_negotiation.as_ref()
     }
@@ -274,9 +274,9 @@ impl Pdu for ConnectionRequest {
             return Err(PduError::InvalidPduType(header.pdu_type));
         }
 
-        // Variable part 읽기
-        let variable_length = (header.length_indicator as usize + 1)
-            .saturating_sub(X224_CONNECTION_HEADER_MIN_SIZE);
+        // Read variable part
+        let variable_length =
+            (header.length_indicator as usize + 1).saturating_sub(X224_CONNECTION_HEADER_MIN_SIZE);
 
         let mut cookie = None;
         let mut rdp_negotiation = None;
@@ -287,7 +287,7 @@ impl Pdu for ConnectionRequest {
 
             let mut cursor = std::io::Cursor::new(&variable_data);
 
-            // Cookie 파싱
+            // Parse Cookie
             if let Ok(cookie_str) = std::str::from_utf8(&variable_data) {
                 if cookie_str.starts_with("Cookie: mstshash=") {
                     if let Some(end) = cookie_str.find("\r\n") {
@@ -297,7 +297,7 @@ impl Pdu for ConnectionRequest {
                 }
             }
 
-            // RDP Negotiation 파싱
+            // Parse RDP Negotiation
             if cursor.position() < variable_data.len() as u64 {
                 if let Ok(negotiation) = RdpNegotiation::decode(&mut cursor) {
                     rdp_negotiation = Some(negotiation);
@@ -315,11 +315,7 @@ impl Pdu for ConnectionRequest {
     fn size(&self) -> usize {
         self.header.size()
             + self.cookie.as_ref().map(|c| c.len()).unwrap_or(0)
-            + self
-                .rdp_negotiation
-                .as_ref()
-                .map(|n| n.size())
-                .unwrap_or(0)
+            + self.rdp_negotiation.as_ref().map(|n| n.size()).unwrap_or(0)
     }
 }
 
@@ -334,14 +330,14 @@ impl PduWithHeader for ConnectionRequest {
 /// X.224 Connection Confirm PDU
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConnectionConfirm {
-    /// Connection 헤더
+    /// Connection header
     header: ConnectionHeader,
-    /// RDP Negotiation Response (옵션)
+    /// RDP Negotiation Response (optional)
     rdp_negotiation: Option<RdpNegotiation>,
 }
 
 impl ConnectionConfirm {
-    /// 새로운 Connection Confirm 생성
+    /// Create new Connection Confirm
     pub fn new(dst_ref: u16, src_ref: u16) -> Self {
         Self {
             header: ConnectionHeader::new_confirm(dst_ref, src_ref),
@@ -349,7 +345,7 @@ impl ConnectionConfirm {
         }
     }
 
-    /// RDP Negotiation Response 설정
+    /// Set RDP Negotiation Response
     pub fn with_negotiation(mut self, protocol: u32) -> Self {
         self.rdp_negotiation = Some(RdpNegotiation::new_response(protocol));
         self.header.length_indicator =
@@ -357,7 +353,7 @@ impl ConnectionConfirm {
         self
     }
 
-    /// RDP Negotiation 반환
+    /// Return RDP Negotiation
     pub fn rdp_negotiation(&self) -> Option<&RdpNegotiation> {
         self.rdp_negotiation.as_ref()
     }
@@ -381,9 +377,9 @@ impl Pdu for ConnectionConfirm {
             return Err(PduError::InvalidPduType(header.pdu_type));
         }
 
-        // Variable part 읽기
-        let variable_length = (header.length_indicator as usize + 1)
-            .saturating_sub(X224_CONNECTION_HEADER_MIN_SIZE);
+        // Read variable part
+        let variable_length =
+            (header.length_indicator as usize + 1).saturating_sub(X224_CONNECTION_HEADER_MIN_SIZE);
 
         let mut rdp_negotiation = None;
 
@@ -393,7 +389,7 @@ impl Pdu for ConnectionConfirm {
 
             let mut cursor = std::io::Cursor::new(&variable_data);
 
-            // RDP Negotiation 파싱
+            // Parse RDP Negotiation
             if let Ok(negotiation) = RdpNegotiation::decode(&mut cursor) {
                 rdp_negotiation = Some(negotiation);
             }
@@ -484,8 +480,7 @@ mod tests {
 
     #[test]
     fn test_connection_request_with_negotiation() {
-        let request =
-            ConnectionRequest::new(0x1234).with_negotiation(Protocol::Ssl as u32);
+        let request = ConnectionRequest::new(0x1234).with_negotiation(Protocol::Ssl as u32);
 
         let mut buffer = Vec::new();
         request.encode(&mut buffer).unwrap();
@@ -539,8 +534,7 @@ mod tests {
 
     #[test]
     fn test_connection_confirm_with_negotiation() {
-        let confirm =
-            ConnectionConfirm::new(0x1234, 0x5678).with_negotiation(Protocol::Ssl as u32);
+        let confirm = ConnectionConfirm::new(0x1234, 0x5678).with_negotiation(Protocol::Ssl as u32);
 
         let mut buffer = Vec::new();
         confirm.encode(&mut buffer).unwrap();

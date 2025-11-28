@@ -1,10 +1,12 @@
 pub mod connection;
 pub mod data;
 
-pub use connection::{ConnectionConfirm, ConnectionHeader, ConnectionRequest, Protocol, RdpNegotiation};
+pub use connection::{
+    ConnectionConfirm, ConnectionHeader, ConnectionRequest, Protocol, RdpNegotiation,
+};
 pub use data::{DataHeader, DataPdu};
 
-/// X.224 PDU 타입
+/// X.224 PDU Type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum PduType {
@@ -21,9 +23,9 @@ pub enum PduType {
 }
 
 impl PduType {
-    /// u8에서 PduType으로 변환 (EOT 플래그 무시)
+    /// Convert u8 to PduType (ignoring EOT flag)
     pub fn from_u8(value: u8) -> Option<Self> {
-        // EOT 플래그를 제거하기 위해 0xFE로 마스킹
+        // Mask with 0xFE to remove EOT flag
         match value & 0xFE {
             0xE0 => Some(Self::ConnectionRequest),
             0xD0 => Some(Self::ConnectionConfirm),

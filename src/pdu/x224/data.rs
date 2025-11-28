@@ -1,16 +1,16 @@
 use crate::pdu::{Pdu, PduError, PduWithHeader, Result};
 use std::io::{Read, Write};
 
-/// X.224 Data PDU 타입 코드 (base, without EOT)
+/// X.224 Data PDU Type code (base, without EOT)
 pub const X224_DATA_TYPE: u8 = 0xF0;
 
-/// EOT (End of Transmission) 플래그 (최하위 비트)
+/// EOT (End of Transmission) flag (least significant bit)
 pub const EOT_FLAG: u8 = 0x01;
 
-/// X.224 Data 헤더 최소 크기
+/// X.224 Data header minimum size
 pub const X224_DATA_HEADER_MIN_SIZE: usize = 2;
 
-/// X.224 Data 헤더
+/// X.224 Data header
 ///
 /// ```text
 /// +--------+--------+
@@ -20,29 +20,29 @@ pub const X224_DATA_HEADER_MIN_SIZE: usize = 2;
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DataHeader {
-    /// Length Indicator: X.224 헤더 길이 - 1
+    /// Length Indicator: X.224 header length - 1
     pub length_indicator: u8,
     /// PDU Type (0xF0 for Data)
     pub pdu_type: u8,
-    /// End of Transmission 플래그
+    /// End of Transmission flag
     pub eot: bool,
 }
 
 impl DataHeader {
-    /// 새로운 X.224 Data 헤더 생성
+    /// Create new X.224 Data header
     ///
     /// # Arguments
-    /// * `eot` - End of Transmission 플래그
+    /// * `eot` - End of Transmission flag
     pub fn new(eot: bool) -> Self {
         Self {
-            // 기본 헤더 크기는 2바이트이므로 LI는 2-1 = 1
+            // Base header size is 2 bytes, so LI is 2-1 = 1
             length_indicator: (X224_DATA_HEADER_MIN_SIZE - 1) as u8,
             pdu_type: X224_DATA_TYPE,
             eot,
         }
     }
 
-    /// 헤더 인코딩
+    /// Encode header
     pub fn encode(&self, buffer: &mut dyn Write) -> Result<()> {
         buffer.write_all(&[self.length_indicator])?;
 
@@ -56,7 +56,7 @@ impl DataHeader {
         Ok(())
     }
 
-    /// 헤더 디코딩
+    /// Decode header
     pub fn decode(buffer: &mut dyn Read) -> Result<Self> {
         let mut header_buf = [0u8; 2];
         buffer.read_exact(&mut header_buf)?;
@@ -64,17 +64,17 @@ impl DataHeader {
         let length_indicator = header_buf[0];
         let type_byte = header_buf[1];
 
-        // EOT 플래그 추출
+        // Extract EOT flag
         let eot = (type_byte & EOT_FLAG) != 0;
 
-        // PDU 타입 검증 (EOT 플래그 제외)
-        // 0xFE로 마스킹하여 최하위 비트(EOT) 제거
+        // Verify PDU Type (excluding EOT flag)
+        // Mask with 0xFE to remove least significant bit (EOT)
         let pdu_type = type_byte & 0xFE;
         if pdu_type != X224_DATA_TYPE {
             return Err(PduError::InvalidPduType(type_byte));
         }
 
-        // Length Indicator 검증
+        // Verify Length Indicator
         if length_indicator < (X224_DATA_HEADER_MIN_SIZE - 1) as u8 {
             return Err(PduError::InvalidLength {
                 expected: X224_DATA_HEADER_MIN_SIZE - 1,
@@ -82,7 +82,7 @@ impl DataHeader {
             });
         }
 
-        // LI가 최소값보다 크면 추가 바이트를 건너뛰어야 함
+        // If LI is greater than minimum, skip extra bytes
         let extra_bytes = length_indicator as usize - (X224_DATA_HEADER_MIN_SIZE - 1);
         if extra_bytes > 0 {
             let mut skip_buf = vec![0u8; extra_bytes];
@@ -96,7 +96,7 @@ impl DataHeader {
         })
     }
 
-    /// 헤더 크기 반환
+    /// Return header size
     pub fn size(&self) -> usize {
         self.length_indicator as usize + 1
     }
@@ -104,47 +104,47 @@ impl DataHeader {
 
 /// X.224 Data PDU
 ///
-/// RDP 데이터를 전송하는 X.224 Data Transfer PDU
+/// X.224 Data Transfer PDU for transmitting RDP data
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DataPdu {
-    /// X.224 Data 헤더
+    /// X.224 Data header
     header: DataHeader,
-    /// 페이로드 (MCS 데이터)
+    /// Payload (MCS data)
     payload: Vec<u8>,
 }
 
 impl DataPdu {
-    /// 새로운 X.224 Data PDU 생성
+    /// Create new X.224 Data PDU
     ///
     /// # Arguments
-    /// * `payload` - MCS 페이로드
-    /// * `eot` - End of Transmission 플래그 (기본값: true)
+    /// * `payload` - MCS payload
+    /// * `eot` - End of Transmission flag (default: true)
     pub fn new(payload: Vec<u8>) -> Self {
         Self::new_with_eot(payload, true)
     }
 
-    /// EOT 플래그를 지정하여 새로운 X.224 Data PDU 생성
+    /// Create new X.224 Data PDU with specified EOT flag
     pub fn new_with_eot(payload: Vec<u8>, eot: bool) -> Self {
         let header = DataHeader::new(eot);
         Self { header, payload }
     }
 
-    /// 페이로드 참조 반환
+    /// Return payload reference
     pub fn payload(&self) -> &[u8] {
         &self.payload
     }
 
-    /// 페이로드 소유권 이전
+    /// Transfer payload ownership
     pub fn into_payload(self) -> Vec<u8> {
         self.payload
     }
 
-    /// 페이로드 가변 참조 반환
+    /// Return mutable payload reference
     pub fn payload_mut(&mut self) -> &mut Vec<u8> {
         &mut self.payload
     }
 
-    /// EOT 플래그 반환
+    /// Return EOT flag
     pub fn eot(&self) -> bool {
         self.header.eot
     }
@@ -160,7 +160,7 @@ impl Pdu for DataPdu {
     fn decode(buffer: &mut dyn Read) -> Result<Self> {
         let header = DataHeader::decode(buffer)?;
 
-        // 나머지 모든 바이트를 페이로드로 읽음
+        // Read all remaining bytes as payload
         let mut payload = Vec::new();
         buffer.read_to_end(&mut payload)?;
 
@@ -231,7 +231,7 @@ mod tests {
 
     #[test]
     fn test_data_header_invalid_type() {
-        let buffer = vec![1, 0xE0]; // 잘못된 PDU 타입 (Connection Request)
+        let buffer = vec![1, 0xE0]; // Invalid PDU Type (Connection Request)
         let mut cursor = Cursor::new(buffer);
         let result = DataHeader::decode(&mut cursor);
 
@@ -292,7 +292,7 @@ mod tests {
         assert_eq!(PduType::from_u8(0xD0), Some(PduType::ConnectionConfirm));
         assert_eq!(PduType::from_u8(0x80), Some(PduType::DisconnectRequest));
         assert_eq!(PduType::from_u8(0xF0), Some(PduType::Data));
-        assert_eq!(PduType::from_u8(0xF1), Some(PduType::Data)); // EOT 플래그 포함
+        assert_eq!(PduType::from_u8(0xF1), Some(PduType::Data)); // Includes EOT flag
         assert_eq!(PduType::from_u8(0x70), Some(PduType::Error));
         assert_eq!(PduType::from_u8(0x99), None);
     }

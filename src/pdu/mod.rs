@@ -1,17 +1,15 @@
 use std::io::{Read, Write};
 use thiserror::Error;
 
-// 단일 파일 모듈
-pub mod tpkt;
-
-// 디렉토리 모듈
 pub mod mcs;
+pub mod rdp;
+pub mod tpkt;
 pub mod x224;
 
-/// PDU 파싱 및 직렬화 결과 타입
+/// PDU parsing and serialization result type
 pub type Result<T> = std::result::Result<T, PduError>;
 
-/// PDU 관련 에러 타입
+/// PDU related error types
 #[derive(Error, Debug)]
 pub enum PduError {
     #[error("Invalid length: expected {expected}, got {actual}")]
@@ -36,23 +34,23 @@ pub enum PduError {
     InvalidPduType(u8),
 }
 
-/// PDU 공통 인터페이스
+/// PDU common interface
 pub trait Pdu: Sized {
-    /// PDU를 바이트 스트림으로 인코딩
+    /// Encode PDU to byte stream
     fn encode(&self, buffer: &mut dyn Write) -> Result<()>;
 
-    /// 바이트 스트림에서 PDU를 디코딩
+    /// Decode PDU from byte stream
     fn decode(buffer: &mut dyn Read) -> Result<Self>;
 
-    /// PDU의 전체 크기 (바이트)
+    /// Total size of PDU (in bytes)
     fn size(&self) -> usize;
 }
 
-/// 헤더가 있는 PDU
+/// PDU with header
 pub trait PduWithHeader: Pdu {
     type Header;
 
-    /// PDU의 헤더 참조 반환
+    /// Return reference to PDU header
     fn header(&self) -> &Self::Header;
 }
 

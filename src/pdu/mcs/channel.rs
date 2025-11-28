@@ -25,7 +25,7 @@ pub struct ChannelJoinRequest {
 }
 
 impl ChannelJoinRequest {
-    /// 새로운 ChannelJoinRequest 생성
+    /// Create new ChannelJoinRequest
     pub fn new(user_id: u16, channel_id: u16) -> Self {
         Self {
             user_id,
@@ -91,7 +91,7 @@ pub struct ChannelJoinConfirm {
 }
 
 impl ChannelJoinConfirm {
-    /// 새로운 ChannelJoinConfirm 생성
+    /// Create new ChannelJoinConfirm
     pub fn new(
         result: McsResult,
         user_id: u16,
@@ -106,7 +106,7 @@ impl ChannelJoinConfirm {
         }
     }
 
-    /// 성공 응답 생성
+    /// Create success response
     pub fn success(user_id: u16, channel_id: u16) -> Self {
         Self::new(
             McsResult::RtSuccessful,
@@ -116,7 +116,7 @@ impl ChannelJoinConfirm {
         )
     }
 
-    /// 실패 응답 생성
+    /// Create failure response
     pub fn failure(result: McsResult, user_id: u16, requested_channel_id: u16) -> Self {
         Self::new(result, user_id, requested_channel_id, None)
     }
