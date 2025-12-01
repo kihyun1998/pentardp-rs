@@ -206,9 +206,18 @@ hex = "0.4"                # 테스트용 hex 인코딩
 - [x] Control/Synchronize PDUs (`pdu/rdp/control.rs`)
 - [x] 통합 테스트 (90개 테스트 통과)
 
-### Phase 4 - 데이터 전송
-- [ ] Input PDUs (키보드, 마우스)
-- [ ] Graphics Update PDUs
+### Phase 4 - 데이터 전송 ✅ 완료
+- [x] Input PDUs (키보드, 마우스)
+  - [x] Keyboard Event (SlowPath & Unicode) (`pdu/rdp/input/keyboard.rs`)
+  - [x] Mouse Event (Standard & Extended) (`pdu/rdp/input/mouse.rs`)
+  - [x] Sync Event (LED indicators)
+  - [x] Input Event PDU container (`pdu/rdp/input/mod.rs`)
+- [x] Graphics Update PDUs
+  - [x] Bitmap Update (`pdu/rdp/graphics/bitmap.rs`)
+  - [x] Orders Update (Drawing Orders) (`pdu/rdp/graphics/orders.rs`)
+  - [x] Palette Update (`pdu/rdp/graphics/mod.rs`)
+  - [x] Update PDU container (`pdu/rdp/graphics/mod.rs`)
+- [x] Unit tests (all tests passing)
 
 ## 7. 테스트 전략
 
